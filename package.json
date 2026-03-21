@@ -11,12 +11,11 @@
     "@google/generative-ai": "^0.21.0",
     "ccxt": "^4.4.45",
     "dotenv": "^17.3.1",
-    "python-shell": "^5.0.0",
+    "tsx": "^4.19.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@google/adk-devtools": "^0.4.0",
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.2"
+    "@types/node": "^22.0.0"
   }
 }
