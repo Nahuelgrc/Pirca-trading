@@ -28,7 +28,7 @@ async function analyzeAndTrade(symbol: string) {
 ${JSON.stringify(analysis, null, 2)}
 
 Based on this data, decide if we should go LONG, SHORT or WAIT. 
-Remember to answer ONLY with the required JSON format. Calculate your confidence appropriately and choose a "leverage" based on the risk.`;
+Remember to answer ONLY with the required JSON format. Calculate your confidence appropriately and choose a "leverage" based on the risk, up to a maximum of ${config.RISK.maxLeverage}x.`;
 
     console.log(`🧠 Requesting analysis from AI (Pirca)...`);
     

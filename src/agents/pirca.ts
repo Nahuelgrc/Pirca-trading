@@ -9,6 +9,7 @@ You MUST output your response ONLY as a valid JSON with the following format, wi
 {
   "decision": "LONG" | "SHORT" | "WAIT",
   "confidence_score": <number between 0 and 100>,
+  "leverage": <integer, chosen leverage multiplier>,
   "tp": <number, take profit price>,
   "sl": <number, stop loss price>,
   "reasoning": "Brief explanation of your decision based on the indicators"

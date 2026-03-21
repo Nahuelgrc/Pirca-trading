@@ -75,10 +75,11 @@ export async function executeDecision(
   console.log(`Confidence     : ${decisionObj.confidence_score}%`);
   console.log(`Take Profit    : ${decisionObj.tp}`);
   console.log(`Stop Loss      : ${decisionObj.sl}`);
-  console.log(`Leverage       : ${config.RISK.leverage}x`);
+  const leverage = Math.min(decisionObj.leverage || 1, config.RISK.maxLeverage);
+  
+  console.log(`Leverage       : ${leverage}x (Max: ${config.RISK.maxLeverage}x)`);
   console.log(`Reasoning      : ${decisionObj.reasoning}`);
 
-  const leverage = config.RISK.leverage;
   const marginUsd = config.RISK.baseAmount;
   const orderSizeUsd = marginUsd * leverage;
   const rawAmount = orderSizeUsd / currentPrice;

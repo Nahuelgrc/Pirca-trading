@@ -41,7 +41,7 @@ Pirca is a fully automated, AI-driven cryptocurrency trading agent. It bridges P
    - **SYMBOLS**: The distinct cryptocurrency pairs to evaluate (e.g. `"ADA/USDT:USDT"`).
    - **ALLOW_MULTIPLE_ORDERS**: Set to `false` to instruct Pirca to ignore a coin if an open position already exists.
    - **TRADE_BASE_AMOUNT**: The pure USD stablecoin amount the bot will invest per trade.
-   - **TRADE_LEVERAGE**: A hardcoded leverage multiplier applied to all your execution instances.
+   - **TRADE_LEVERAGE_MAX**: A hardcoded leverage multiplier applied to all your execution instances.
    - **Exchange Flags**: Use boolean switches (`USE_OKX=true`) and matching credentials to activate any desired exchange natively. OKX requires a `PASSWORD` (Passphrase) in addition to Key and Secret.
    - **TELEGRAM_BOT_TOKEN** / **TELEGRAM_CHAT_ID**: Credentials acquired via BotFather to receive real-time notification alerts (Optional).
 

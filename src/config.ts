@@ -36,7 +36,7 @@ export const config = {
   RISK: {
     allowMultipleOrders: process.env.ALLOW_MULTIPLE_ORDERS === "true",
     baseAmount: Number(process.env.TRADE_BASE_AMOUNT) || 100,
-    leverage: Number(process.env.TRADE_LEVERAGE) || 1,
+    maxLeverage: Number(process.env.TRADE_LEVERAGE_MAX) || 1,
   },
 
   INTERVAL_MS: 15 * 60 * 1000,
