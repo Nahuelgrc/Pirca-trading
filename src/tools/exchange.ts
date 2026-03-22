@@ -75,7 +75,10 @@ export async function executeDecision(
   console.log(`Confidence     : ${decisionObj.confidence_score}%`);
   console.log(`Take Profit    : ${decisionObj.tp}`);
   console.log(`Stop Loss      : ${decisionObj.sl}`);
-  const leverage = Math.min(decisionObj.leverage || 1, config.RISK.maxLeverage);
+  
+  // Usamos el apalancamiento dictado por Pirca (la IA).
+  const proposedLeverage = Number(decisionObj.leverage) || 10;
+  const leverage = Math.min(proposedLeverage, config.RISK.maxLeverage);
   
   console.log(`Leverage       : ${leverage}x (Max: ${config.RISK.maxLeverage}x)`);
   console.log(`Reasoning      : ${decisionObj.reasoning}`);
