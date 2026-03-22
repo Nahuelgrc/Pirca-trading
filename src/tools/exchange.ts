@@ -147,11 +147,26 @@ export async function executeDecision(
         orderParams.stopLoss = decisionObj.sl;
       }
 
+      let finalAmount = rawAmount;
+      if (client.id === "okx") {
+         await client.loadMarkets();
+         const market = client.market(symbol);
+         if (market && market.contractSize) {
+            // OKX requires the amount to be an integer number of contracts, not base currency.
+            finalAmount = Math.floor(rawAmount / market.contractSize);
+            
+            // If the requested risk is not enough to buy at least 1 minimum contract, we default to the minimum amount (1)
+            if (finalAmount < 1) {
+               finalAmount = 1;
+            }
+         }
+      }
+
       const order = await client.createOrder(
         symbol,
         "market",
         side,
-        rawAmount,
+        finalAmount,
         undefined,
         orderParams,
       );
@@ -160,19 +175,25 @@ export async function executeDecision(
         `✅ Order successfully sent to ${client.id}! (Order ID: ${order.id || "N/A"})`,
       );
 
-      const message = `🤖 *Pirca Trade Executed* 🤖
-*Exchange:* \`${client.id.toUpperCase()}\`
-*Symbol:* \`${symbol}\`
-*Action:* \`${decisionObj.decision}\`
-*Leverage:* \`${leverage}x\`
-*Entry Price:* \`$${currentPrice}\`
-*Take Profit:* \`$${decisionObj.tp}\`
-*Stop Loss:* \`$${decisionObj.sl}\`
+      // Sanitizamos el texto de razonamiento de Gemini para evitar romper el HTML
+    const escapedReasoning = String(decisionObj.reasoning)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
-🧠 *Reasoning:*
-_${decisionObj.reasoning}_`;
+    // Enviar notificación instantánea a Telegram con HTML
+    const message = `🤖 <b>Pirca Trade Executed</b> 🤖
+<b>Symbol:</b> <code>${symbol}</code>
+<b>Action:</b> <code>${decisionObj.decision}</code>
+<b>Leverage:</b> <code>${leverage}x</code>
+<b>Entry Price:</b> <code>$${currentPrice}</code>
+<b>Take Profit:</b> <code>$${decisionObj.tp}</code>
+<b>Stop Loss:</b> <code>$${decisionObj.sl}</code>
 
-      await sendTelegramMessage(message);
+🧠 <b>Reasoning:</b>
+<i>${escapedReasoning}</i>`;
+
+    await sendTelegramMessage(message);
     } catch (err: any) {
       console.error(`❌ Order failed in Testnet (${client.id}):`, err.message);
     }
