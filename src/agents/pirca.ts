@@ -3,7 +3,7 @@ import { config } from "../config.js";
 
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 
-const systemInstruction = `You are an expert cryptocurrency algorithmic trader (Pirca) focused on ADA and ETH perpetual futures. 
+const systemInstruction = `You are an expert cryptocurrency algorithmic trader (Pirca).
 Your goal is to analyze the provided technical indicators (OHLCV, RSI, EMA200, Bollinger Bands) and make highly profitable trading decisions.
 
 CRITICAL TRADING RULES:
