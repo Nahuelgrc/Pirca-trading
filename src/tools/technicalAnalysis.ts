@@ -13,6 +13,7 @@ export async function getTechnicalAnalysis(symbol: string): Promise<any> {
   const exchangeClient = activeExchanges[0];
 
   const ohlcv = await exchangeClient.fetchOHLCV(symbol, "15m", undefined, 250); // Minimum 200 candles for EMA 200
+  const ohlcvMacro = await exchangeClient.fetchOHLCV(symbol, "4h", undefined, 250); // Macro trend fetch
 
   const ohlcvData = ohlcv.map((candle: any) => ({
     timestamp: candle[0],
@@ -23,6 +24,21 @@ export async function getTechnicalAnalysis(symbol: string): Promise<any> {
     volume: candle[5],
   }));
 
+  const ohlcvMacroData = ohlcvMacro.map((candle: any) => ({
+    timestamp: candle[0],
+    open: candle[1],
+    high: candle[2],
+    low: candle[3],
+    close: candle[4],
+    volume: candle[5],
+  }));
+
   // Analyze completely natively in JS/TS without Python
-  return analyze(ohlcvData);
+  const analysis15m = analyze(ohlcvData);
+  const analysis4h = analyze(ohlcvMacroData);
+
+  return {
+    ...analysis15m,
+    macro_ema_200_4H: analysis4h.ema_200, // Add the macro trend direction (Multi-Timeframe)
+  };
 }

@@ -2,6 +2,8 @@ import { pircaModel } from "./agents/pirca.js";
 import { getTechnicalAnalysis } from "./tools/technicalAnalysis.js";
 import { executeDecision, hasOpenPosition } from "./tools/exchange.js";
 import { config } from "./config.js";
+import { getLatestCryptoNews } from "./tools/news.js";
+import { initLogger } from "./tools/logger.js";
 
 async function analyzeAndTrade(symbol: string) {
   try {
@@ -19,13 +21,16 @@ async function analyzeAndTrade(symbol: string) {
     const analysis = await getTechnicalAnalysis(symbol);
     console.log(`Technical Data:`, JSON.stringify(analysis));
 
-    if (analysis && analysis.error) {
-      console.error(`Python script error for ${symbol}:`, analysis.error);
-      return;
+    const recentNews = await getLatestCryptoNews();
+    if (recentNews.length > 0) {
+      console.log(`Global Crypto News Loaded (${recentNews.length} headlines)`);
     }
 
     const prompt = `Here are the recent technical indicators for ${symbol}:
 ${JSON.stringify(analysis, null, 2)}
+
+Here are the latest global Crypto News headlines (Fundamental Analysis):
+- ${recentNews.join('\n- ')}
 
 Based on this data, decide if we should go LONG, SHORT or WAIT. 
 Remember to answer ONLY with the required JSON format. Calculate your confidence appropriately and choose a "leverage" based on the risk, up to a maximum of ${config.RISK.maxLeverage}x.`;
@@ -51,6 +56,7 @@ Remember to answer ONLY with the required JSON format. Calculate your confidence
 
 // Main loop (24/7 Continuous Mode)
 async function startAgent() {
+  initLogger();
   console.log("Pirca Agent Started. (24/7 Continuous Mode)");
   console.log(`Monitoring ${config.SYMBOLS.join(" and ")} every ${config.INTERVAL_MS / 60000} minutes...`);
 

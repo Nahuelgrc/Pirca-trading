@@ -1,6 +1,7 @@
 import ccxt from "ccxt";
 import { config } from "../config.js";
 import { sendTelegramMessage } from "./notifications.js";
+import { logTrade } from "./logger.js";
 
 // Dynamic initializer for active exchanges
 export function initializeExchanges() {
@@ -75,12 +76,14 @@ export async function executeDecision(
   console.log(`Confidence     : ${decisionObj.confidence_score}%`);
   console.log(`Take Profit    : ${decisionObj.tp}`);
   console.log(`Stop Loss      : ${decisionObj.sl}`);
-  
-  // Usamos el apalancamiento dictado por Pirca (la IA).
+
+  // Use the leverage dictated by Pirca (the AI).
   const proposedLeverage = Number(decisionObj.leverage) || 10;
   const leverage = Math.min(proposedLeverage, config.RISK.maxLeverage);
-  
-  console.log(`Leverage       : ${leverage}x (Max: ${config.RISK.maxLeverage}x)`);
+
+  console.log(
+    `Leverage       : ${leverage}x (Max: ${config.RISK.maxLeverage}x)`,
+  );
   console.log(`Reasoning      : ${decisionObj.reasoning}`);
 
   const marginUsd = config.RISK.baseAmount;
@@ -141,6 +144,9 @@ export async function executeDecision(
       console.log(`>>> Executing order in ${client.id} Testnet...`);
 
       const orderParams: any = {};
+      const trailPercent = Number(decisionObj.trailing_percent) || 1.5;
+      const trailDistance = (currentPrice * trailPercent) / 100;
+
       if (client.id === "okx") {
         orderParams.tdMode = "isolated";
         orderParams.takeProfit = { triggerPrice: decisionObj.tp };
@@ -148,21 +154,33 @@ export async function executeDecision(
       } else {
         orderParams.takeProfit = decisionObj.tp;
         orderParams.stopLoss = decisionObj.sl;
+
+        // --- Native Trailing Stops (Binance and Bybit via CCXT for now) ---
+        if (client.id === "bybit") {
+          // Bybit Unified API accepts the exact trailing distance in the input payload
+          orderParams.trailingStop = trailDistance;
+        } else if (client.id === "binance") {
+          // Binance Futures requires a percentage (typically between 0.1 and 5.0)
+          orderParams.trailingPercent = Math.min(
+            Math.max(trailPercent, 0.1),
+            5.0,
+          );
+        }
       }
 
       let finalAmount = rawAmount;
       if (client.id === "okx") {
-         await client.loadMarkets();
-         const market = client.market(symbol);
-         if (market && market.contractSize) {
-            // OKX requires the amount to be an integer number of contracts, not base currency.
-            finalAmount = Math.floor(rawAmount / market.contractSize);
-            
-            // If the requested risk is not enough to buy at least 1 minimum contract, we default to the minimum amount (1)
-            if (finalAmount < 1) {
-               finalAmount = 1;
-            }
-         }
+        await client.loadMarkets();
+        const market = client.market(symbol);
+        if (market && market.contractSize) {
+          // OKX requires the amount to be an integer number of contracts, not base currency.
+          finalAmount = Math.floor(rawAmount / market.contractSize);
+
+          // If the requested risk is not enough to buy at least 1 minimum contract, we default to the minimum amount (1)
+          if (finalAmount < 1) {
+            finalAmount = 1;
+          }
+        }
       }
 
       const order = await client.createOrder(
@@ -178,17 +196,21 @@ export async function executeDecision(
         `✅ Order successfully sent to ${client.id}! (Order ID: ${order.id || "N/A"})`,
       );
 
-      // Sanitizamos el texto de razonamiento de Gemini para evitar romper el HTML
-    const escapedReasoning = String(decisionObj.reasoning)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      // Archive the transaction in the Local Database
+      logTrade(client.id, symbol, decisionObj, currentPrice, leverage);
 
-    // Enviar notificación instantánea a Telegram con HTML
-    const message = `🤖 <b>Pirca Trade Executed</b> 🤖
+      // Sanitize Gemini's reasoning text pattern to avoid breaking Telegram's HTML parser
+      const escapedReasoning = String(decisionObj.reasoning)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Send instant Telegram notification with HTML formatting
+      const message = `🤖 <b>Pirca Trade Executed</b> 🤖
 <b>Symbol:</b> <code>${symbol}</code>
 <b>Action:</b> <code>${decisionObj.decision}</code>
 <b>Leverage:</b> <code>${leverage}x</code>
+<b>Trailing Stop:</b> <code>${decisionObj.trailing_percent || 1.5}%</code>
 <b>Entry Price:</b> <code>$${currentPrice}</code>
 <b>Take Profit:</b> <code>$${decisionObj.tp}</code>
 <b>Stop Loss:</b> <code>$${decisionObj.sl}</code>
@@ -196,7 +218,7 @@ export async function executeDecision(
 🧠 <b>Reasoning:</b>
 <i>${escapedReasoning}</i>`;
 
-    await sendTelegramMessage(message);
+      await sendTelegramMessage(message);
     } catch (err: any) {
       console.error(`❌ Order failed in Testnet (${client.id}):`, err.message);
     }
