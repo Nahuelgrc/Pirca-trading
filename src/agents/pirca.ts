@@ -19,7 +19,7 @@ You MUST output your response ONLY as a valid JSON with the following format, wi
 {
   "decision": "LONG" | "SHORT" | "WAIT",
   "confidence_score": <number between 0 and 100>,
-  "leverage": <integer, chosen leverage multiplier. You MUST return at least 10 or higher (e.g., 10, 20, 50) so the minimum exchange contract sizes are met>,
+  "leverage": <integer, chosen leverage multiplier. Dynamically scale your leverage between 10x and 100x based strictly on your confidence score>,
   "tp": <number, take profit price>,
   "sl": <number, stop loss price>,
   "trailing_percent": <number, the percentage distance for the Trailing Stop to follow the price (e.g., 0.5, 1.5)>,
