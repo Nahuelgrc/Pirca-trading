@@ -1,33 +1,50 @@
 import ccxt from "ccxt";
 import { analyze } from "./analyzer.js";
 
-// Tool: Get Technical Analysis natively via TS math (Data fetched from Binance Public Spot)
+// Tool: Get Technical Analysis natively via TS math (Data fetched from BingX Public)
 export async function getTechnicalAnalysis(symbol: string): Promise<any> {
-  // We use Binance Public API for the Macro Trend because Testnets usually lack historical data
-  const binancePublic = new ccxt.binance();
-  const baseSymbol = symbol.split(":")[0]; // e.g., "ETH/USDT:USDT" -> "ETH/USDT"
+  // We use BingX Public API for the Macro Trend/Indicators because it's less restricted on US IPs (Railway)
+  const bingxPublic = new ccxt.bingx();
+
+  // Mapping symbols for BingX: "ETH/USDT:USDT" -> "ETH-USDT" (Swap format)
+  // BingX swap symbols in CCXT typically use "ETH-USDT"
+  const cleanSymbol = symbol.split(":")[0].replace("/", "-");
 
   let ohlcv15m, ohlcvMacro;
   try {
-    // Extraemos la historia completa de Mainnet para tener indicadores reales y liquidez perfecta
-    ohlcv15m = await binancePublic.fetchOHLCV(
-      baseSymbol,
-      "15m",
-      undefined,
-      250,
-    );
-    ohlcvMacro = await binancePublic.fetchOHLCV(
-      baseSymbol,
+    // We fetch real data from BingX Swap to have deep liquidity and indices
+    ohlcv15m = await bingxPublic.fetchOHLCV(cleanSymbol, "15m", undefined, 250);
+    ohlcvMacro = await bingxPublic.fetchOHLCV(
+      cleanSymbol,
       "4h",
       undefined,
       250,
     );
   } catch (error) {
-    console.error(
-      `❌ Error fetching OHLCV data from Binance Public API for ${baseSymbol}:`,
-      error,
+    console.warn(
+      `⚠️ BingX public fetch failed for ${cleanSymbol}, trying fallback with standard format...`,
     );
-    throw error;
+    try {
+      const fallbackSymbol = symbol.split(":")[0]; // "ETH/USDT"
+      ohlcv15m = await bingxPublic.fetchOHLCV(
+        fallbackSymbol,
+        "15m",
+        undefined,
+        250,
+      );
+      ohlcvMacro = await bingxPublic.fetchOHLCV(
+        fallbackSymbol,
+        "4h",
+        undefined,
+        250,
+      );
+    } catch (finalError: any) {
+      console.error(
+        `❌ Error fetching OHLCV from BingX for ${symbol}:`,
+        finalError.message,
+      );
+      throw finalError;
+    }
   }
 
   const ohlcvData = ohlcv15m.map((candle: any) => ({
@@ -54,6 +71,6 @@ export async function getTechnicalAnalysis(symbol: string): Promise<any> {
 
   return {
     ...analysis15m,
-    macro_ema_200_4H: analysis4h.ema_200, // Macro Multi-Timeframe Trend (Revertido a 200 directo de Binance Mainnet)
+    macro_ema_200_4H: analysis4h.ema_200, // Macro Multi-Timeframe Trend
   };
 }
