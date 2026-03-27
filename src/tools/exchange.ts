@@ -14,7 +14,7 @@ export function initializeExchanges() {
       enableRateLimit: true,
       options: { defaultType: "future" },
     });
-    ex.setSandboxMode(true);
+    ex.setSandboxMode(false);
     activeExchanges.push(ex);
   }
 

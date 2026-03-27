@@ -1,21 +1,36 @@
-import { activeExchanges } from "./exchange.js";
+import ccxt from "ccxt";
 import { analyze } from "./analyzer.js";
 
-// Tool: Get Technical Analysis natively via TS math
+// Tool: Get Technical Analysis natively via TS math (Data fetched from Binance Public Spot)
 export async function getTechnicalAnalysis(symbol: string): Promise<any> {
-  if (activeExchanges.length === 0) {
-    throw new Error(
-      "No enabled exchanges to get technical data.",
+  // We use Binance Public API for the Macro Trend because Testnets usually lack historical data
+  const binancePublic = new ccxt.binance();
+  const baseSymbol = symbol.split(":")[0]; // e.g., "ETH/USDT:USDT" -> "ETH/USDT"
+
+  let ohlcv15m, ohlcvMacro;
+  try {
+    // Extraemos la historia completa de Mainnet para tener indicadores reales y liquidez perfecta
+    ohlcv15m = await binancePublic.fetchOHLCV(
+      baseSymbol,
+      "15m",
+      undefined,
+      250,
     );
+    ohlcvMacro = await binancePublic.fetchOHLCV(
+      baseSymbol,
+      "4h",
+      undefined,
+      250,
+    );
+  } catch (error) {
+    console.error(
+      `❌ Error fetching OHLCV data from Binance Public API for ${baseSymbol}:`,
+      error,
+    );
+    throw error;
   }
 
-  // Take the first active exchange as the source of truth for prices
-  const exchangeClient = activeExchanges[0];
-
-  const ohlcv = await exchangeClient.fetchOHLCV(symbol, "15m", undefined, 250); // Minimum 200 candles for EMA 200
-  const ohlcvMacro = await exchangeClient.fetchOHLCV(symbol, "4h", undefined, 250); // Macro trend fetch
-
-  const ohlcvData = ohlcv.map((candle: any) => ({
+  const ohlcvData = ohlcv15m.map((candle: any) => ({
     timestamp: candle[0],
     open: candle[1],
     high: candle[2],
@@ -39,8 +54,6 @@ export async function getTechnicalAnalysis(symbol: string): Promise<any> {
 
   return {
     ...analysis15m,
-    macro_ema_50_4H: analysis4h.ema_50, // Macro Multi-Timeframe Trend
-    // macro_ema_100_4H: analysis4h.ema_100, // Commented out due to OKX Testnet aggressive candle limitations
-    // macro_ema_200_4H: analysis4h.ema_200, // Kept referenced but commented out due to OKX Testnet 144 candle limit
+    macro_ema_200_4H: analysis4h.ema_200, // Macro Multi-Timeframe Trend (Revertido a 200 directo de Binance Mainnet)
   };
 }
