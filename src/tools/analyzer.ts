@@ -81,6 +81,7 @@ export function analyze(data: any[]): any {
     // Calculate native indicators
     const rsi = calculateRsi(closes, 14);
     const ema200 = calculateEma(closes, 200);
+    const ema100 = calculateEma(closes, 100);
     const atr14 = calculateAtr(data, 14);
 
     // Bollinger Bands
@@ -143,6 +144,7 @@ export function analyze(data: any[]): any {
       atr_14: atr14 ? Number(atr14.toFixed(4)) : null,
       rsi: rsi ? Number(rsi.toFixed(2)) : null,
       ema_200: ema200 ? Number(ema200.toFixed(2)) : null,
+      ema_100: ema100 ? Number(ema100.toFixed(2)) : null,
       bb_lower: bbLower ? Number(bbLower.toFixed(2)) : null,
       bb_upper: bbUpper ? Number(bbUpper.toFixed(2)) : null,
       fibonacci,

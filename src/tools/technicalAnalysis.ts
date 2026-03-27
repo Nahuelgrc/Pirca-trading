@@ -39,6 +39,7 @@ export async function getTechnicalAnalysis(symbol: string): Promise<any> {
 
   return {
     ...analysis15m,
-    macro_ema_200_4H: analysis4h.ema_200, // Add the macro trend direction (Multi-Timeframe)
+    macro_ema_100_4H: analysis4h.ema_100, // Macro Multi-Timeframe Trend
+    // macro_ema_200_4H: analysis4h.ema_200, // Kept referenced but commented out due to OKX Testnet 144 candle limit
   };
 }

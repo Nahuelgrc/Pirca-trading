@@ -11,8 +11,10 @@ async function analyzeAndTrade(symbol: string) {
     if (!config.RISK.allowMultipleOrders) {
       const alreadyTrading = await hasOpenPosition(symbol);
       if (alreadyTrading) {
-        console.log(`\n--- [${symbol}] You already have an active operation (waiting to hit TP/SL). Analysis skipped. ---`);
-        return; 
+        console.log(
+          `\n--- [${symbol}] You already have an active operation (waiting to hit TP/SL). Analysis skipped. ---`,
+        );
+        return;
       }
     }
 
@@ -30,13 +32,13 @@ async function analyzeAndTrade(symbol: string) {
 ${JSON.stringify(analysis, null, 2)}
 
 Here are the latest global Crypto News headlines (Fundamental Analysis):
-- ${recentNews.join('\n- ')}
+- ${recentNews.join("\n- ")}
 
 Based on this data, decide if we should go LONG, SHORT or WAIT. 
 Remember to answer ONLY with the required JSON format. Calculate your confidence appropriately and choose a "leverage" based on the risk, up to a maximum of ${config.RISK.maxLeverage}x.`;
 
     console.log(`🧠 Requesting analysis from AI (Pirca)...`);
-    
+
     // Gemini API Call
     const result = await pircaModel.generateContent(prompt);
     const responseText = result.response.text();
@@ -58,7 +60,9 @@ Remember to answer ONLY with the required JSON format. Calculate your confidence
 async function startAgent() {
   initLogger();
   console.log("Pirca Agent Started. (24/7 Continuous Mode)");
-  console.log(`Monitoring ${config.SYMBOLS.join(" and ")} every ${config.INTERVAL_MS / 60000} minutes...`);
+  console.log(
+    `Monitoring ${config.SYMBOLS.join(" and ")} every ${config.INTERVAL_MS / 60000} minutes...`,
+  );
 
   const tick = async () => {
     console.log(`\n[${new Date().toISOString()}] Executing Agent Tick`);
