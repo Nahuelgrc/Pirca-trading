@@ -3,7 +3,7 @@ import { config } from "../config.js";
 import { sendTelegramMessage } from "./notifications.js";
 
 // Dynamic initializer for active exchanges
-export function initializeExchanges() {
+export const initializeExchanges = () => {
   const activeExchanges: any[] = [];
 
   if (config.EXCHANGES.BINANCE.enabled) {
@@ -57,11 +57,11 @@ export function initializeExchanges() {
 export const activeExchanges = initializeExchanges();
 
 // Function to register and execute the order in Testnet on ALL active exchanges
-export async function executeDecision(
+export const executeDecision = async (
   symbol: string,
   decisionObj: any,
   currentPrice: number,
-) {
+) => {
   if (decisionObj.decision === "WAIT" || decisionObj.confidence_score < 60) {
     console.log(
       `[${symbol}] Action: WAIT. Reasoning: ${decisionObj.reasoning}`,
@@ -222,7 +222,7 @@ export async function executeDecision(
 }
 
 // Function to verify if there is an active position or order (in ANY enabled exchange)
-export async function hasOpenPosition(symbol: string): Promise<boolean> {
+export const hasOpenPosition = async (symbol: string): Promise<boolean> => {
   if (activeExchanges.length === 0) return false;
 
   for (const client of activeExchanges) {

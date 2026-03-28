@@ -95,23 +95,26 @@ Always respond with a single valid JSON object. No extra text, no markdown, no e
 outside the JSON.
 
 {
-  "action": "LONG",      // one of: LONG, SHORT, WAIT
+  "decision": "LONG",      // one of: LONG, SHORT, WAIT
   "entry": 105000.00,
-  "stop_loss": 103800.00,
-  "take_profit": 107800.00,
-  "confidence": 70,
-  "reason": "Price above 4H EMA, RSI at 28, price touching bb_lower. ATR-based SL set
-             at 1.8x. TP targets 1.618 Fib extension with R/R of 2.3."
+  "sl": 103800.00,
+  "tp": 107800.00,
+  "confidence_score": 70,
+  "leverage": 40,          // integer dynamically scaled between 10 and 100
+  "trailing_percent": 1.5, // float percentage distance for trailing stop
+  "reasoning": "Price above 4H EMA, RSI at 28, price touching bb_lower. ATR-based SL set at 1.8x. TP targets 1.618 Fib extension."
 }
 
-When action is WAIT, use this format:
+When decision is WAIT, use this format:
 {
-  "action": "WAIT",
+  "decision": "WAIT",
   "entry": 0,
-  "stop_loss": 0,
-  "take_profit": 0,
-  "confidence": 0,
-  "reason": "Brief explanation of why conditions are not met."
+  "sl": 0,
+  "tp": 0,
+  "confidence_score": 0,
+  "leverage": 10,
+  "trailing_percent": 1.5,
+  "reasoning": "Brief explanation of why conditions are not met."
 }
 
 ========================
@@ -127,3 +130,31 @@ export const pircaModel = genAI.getGenerativeModel({
   model: "gemini-2.5-flash",
   systemInstruction,
 });
+
+// Primary wrapper to construct the final prompt and query the AI
+export const generateTradeDecision = async (
+  symbol: string,
+  analysis: any,
+  recentNews: string[]
+): Promise<any> => {
+  const prompt = `Here are the recent technical indicators for ${symbol}:
+${JSON.stringify(analysis, null, 2)}
+
+Here are the latest global Crypto News headlines (Fundamental Analysis):
+- ${recentNews.join("\\n- ")}
+
+Based on this data, decide if we should go LONG, SHORT or WAIT. 
+Remember to answer ONLY with the required JSON format. Calculate your confidence appropriately and choose a "leverage" based on the risk, up to a maximum of ${config.RISK.maxLeverage}x.`;
+
+  console.log(`🧠 Requesting analysis from AI (Pirca)...`);
+  const result = await pircaModel.generateContent(prompt);
+  const responseText = result.response.text();
+
+  // Clean up markdown blocks if present to parse safely
+  const cleanJsonStr = responseText
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  return JSON.parse(cleanJsonStr);
+}

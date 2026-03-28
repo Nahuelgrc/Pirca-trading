@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 
 // Native tool to send Telegram messages (100% free)
-export async function sendTelegramMessage(text: string) {
+export const sendTelegramMessage = async (text: string) => {
   const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = config;
 
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {

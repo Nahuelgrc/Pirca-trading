@@ -2,7 +2,7 @@ import ccxt from "ccxt";
 import { analyze } from "./analyzer.js";
 
 // Tool: Get Technical Analysis natively via TS math (Data fetched from BingX Public)
-export async function getTechnicalAnalysis(symbol: string): Promise<any> {
+export const getTechnicalAnalysis = async (symbol: string): Promise<any> => {
   // We use BingX Public API for the Macro Trend/Indicators because it's less restricted on US IPs (Railway)
   const bingxPublic = new ccxt.bingx();
 

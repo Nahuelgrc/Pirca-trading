@@ -1,4 +1,4 @@
-export async function getLatestCryptoNews(): Promise<string[]> {
+export const getLatestCryptoNews = async (): Promise<string[]> => {
   try {
     // Bypass standard APIs with strict keys. We use CoinTelegraph's public RSS tree. 100% free.
     const url = "https://cointelegraph.com/rss";
