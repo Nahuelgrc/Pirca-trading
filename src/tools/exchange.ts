@@ -1,7 +1,6 @@
 import ccxt from "ccxt";
 import { config } from "../config.js";
 import { sendTelegramMessage } from "./notifications.js";
-import { logTrade } from "./logger.js";
 
 // Dynamic initializer for active exchanges
 export function initializeExchanges() {
@@ -195,9 +194,6 @@ export async function executeDecision(
       console.log(
         `✅ Order successfully sent to ${client.id}! (Order ID: ${order.id || "N/A"})`,
       );
-
-      // Archive the transaction in the Local Database
-      logTrade(client.id, symbol, decisionObj, currentPrice, leverage);
 
       // Sanitize Gemini's reasoning text pattern to avoid breaking Telegram's HTML parser
       const escapedReasoning = String(decisionObj.reasoning)

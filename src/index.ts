@@ -1,9 +1,10 @@
+import http from "http";
+import fs from "fs";
 import { pircaModel } from "./agents/pirca.js";
 import { getTechnicalAnalysis } from "./tools/technicalAnalysis.js";
 import { executeDecision, hasOpenPosition } from "./tools/exchange.js";
 import { config } from "./config.js";
 import { getLatestCryptoNews } from "./tools/news.js";
-import { initLogger } from "./tools/logger.js";
 
 async function analyzeAndTrade(symbol: string) {
   try {
@@ -58,7 +59,6 @@ Remember to answer ONLY with the required JSON format. Calculate your confidence
 
 // Main loop (24/7 Continuous Mode)
 async function startAgent() {
-  initLogger();
   console.log("Pirca Agent Started. (24/7 Continuous Mode)");
   console.log(
     `Monitoring ${config.SYMBOLS.join(" and ")} every ${config.INTERVAL_MS / 60000} minutes...`,
@@ -79,3 +79,12 @@ async function startAgent() {
 }
 
 startAgent();
+
+// Web Server to keep Cloud App alive
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Pirca Trading Agent is running 24/7.\n");
+}).listen(Number(port), "0.0.0.0", () => {
+  console.log(`🌐 Cloud Healthcheck Server listening on 0.0.0.0:${port}`);
+});
